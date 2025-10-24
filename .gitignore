@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Development tools and setup files
+setup_admin.js
+setup_initial_admin.sql
+
+# Temporary SQL files (keep the safe ones)
+fix_storage_policies.sql
+
+# Personal development files
+*.log
+*.tmp

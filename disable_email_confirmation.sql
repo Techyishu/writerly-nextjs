@@ -1,0 +1,4 @@
+-- This is not a SQL command - this is a note about Supabase settings
+-- You need to disable email confirmation in Supabase Dashboard
+-- Go to: Authentication > Settings > Email Auth
+-- Turn OFF "Enable email confirmations"

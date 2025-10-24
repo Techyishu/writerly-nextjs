@@ -1,36 +1,155 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Writerly Blog - Next.js + Supabase
 
-## Getting Started
+A modern, beautiful blog platform built with Next.js 14, Supabase, and Tailwind CSS.
 
-First, run the development server:
+## Features
+
+- 🎨 **Beautiful Design**: Modern, responsive design with cosmic background
+- 📝 **Blog Management**: Create, edit, and manage blog posts
+- 🔐 **Admin Panel**: Secure authentication and admin dashboard
+- 📊 **Analytics**: Visitor tracking and analytics
+- 🚀 **Performance**: Optimized for speed with Next.js
+- ☁️ **Deployment**: Ready for Vercel deployment
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React 19, TypeScript
+- **Styling**: Tailwind CSS, Radix UI
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Deployment**: Vercel
+
+## Setup Instructions
+
+### 1. Clone and Install
+
+```bash
+cd writerly-nextjs
+npm install
+```
+
+### 2. Set up Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to Settings > API to get your project URL and anon key
+3. Run the SQL schema in your Supabase SQL editor:
+
+```sql
+-- Copy and paste the contents of supabase-schema.sql
+```
+
+### 3. Environment Variables
+
+**⚠️ IMPORTANT: You must create a `.env.local` file before running the application!**
+
+Create a `.env.local` file in the root directory:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+**To get your Supabase credentials:**
+1. Go to your Supabase project dashboard
+2. Navigate to Settings > API
+3. Copy the "Project URL" and "anon public" key
+4. Replace the placeholder values in your `.env.local` file
+
+**Example:**
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### 4. Create Admin User
+
+1. Go to your Supabase dashboard
+2. Navigate to Authentication > Users
+3. Create a new user with email and password
+4. Go to Table Editor > users
+5. Create a user record with the same email
+
+### 5. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Push to GitHub
 
-## Learn More
+```bash
+git add .
+git commit -m "Initial commit"
+git push origin main
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Deploy to Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Go to [vercel.com](https://vercel.com)
+2. Import your GitHub repository
+3. Add environment variables in Vercel dashboard
+4. Deploy!
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Set up Supabase Production
 
-## Deploy on Vercel
+1. Create a new Supabase project for production
+2. Run the same SQL schema
+3. Update environment variables in Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/                 # Next.js app directory
+│   ├── api/            # API routes
+│   ├── admin/          # Admin pages
+│   ├── post/[slug]/    # Blog post pages
+│   └── page.tsx        # Home page
+├── components/         # React components
+│   ├── ui/            # UI components
+│   └── ...            # Other components
+├── contexts/          # React contexts
+├── hooks/             # Custom hooks
+├── lib/               # Utilities
+└── pages/             # Page components
+```
+
+## Features
+
+### Blog Features
+- Responsive design
+- Beautiful cosmic background
+- Blog post cards with categories
+- Reading time estimation
+- Featured posts
+- Search and filtering
+
+### Admin Features
+- Secure authentication
+- Post creation and editing
+- Image upload
+- Publish/unpublish posts
+- Visitor analytics
+- User management
+
+### Technical Features
+- Server-side rendering
+- API routes
+- Database integration
+- File storage
+- Real-time updates
+- SEO optimization
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
