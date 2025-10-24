@@ -6,6 +6,9 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
+
+// Prevent static generation
+export const runtime = 'nodejs';
 import { blogService, BlogPost } from '@/lib/sanity';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { BlogHeader } from '@/components/BlogHeader';
