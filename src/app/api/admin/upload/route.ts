@@ -20,12 +20,18 @@ export async function POST(request: NextRequest) {
     // Check if Sanity configuration is available
     if (!process.env.SANITY_API_TOKEN) {
       console.error('SANITY_API_TOKEN is not configured');
-      return NextResponse.json({ error: 'Sanity configuration missing' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'Sanity configuration missing',
+        details: 'SANITY_API_TOKEN environment variable is not set'
+      }, { status: 500 });
     }
 
     if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || !process.env.NEXT_PUBLIC_SANITY_DATASET) {
       console.error('Sanity project configuration is missing');
-      return NextResponse.json({ error: 'Sanity project configuration missing' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'Sanity project configuration missing',
+        details: 'NEXT_PUBLIC_SANITY_PROJECT_ID or NEXT_PUBLIC_SANITY_DATASET is not set'
+      }, { status: 500 });
     }
 
     console.log('Uploading file to Sanity:', { fileName: file.name, fileSize: file.size, fileType: file.type });
