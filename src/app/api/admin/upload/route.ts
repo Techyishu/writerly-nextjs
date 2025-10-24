@@ -45,7 +45,14 @@ export async function POST(request: NextRequest) {
     console.log('Sanity configuration verified');
     console.log('Uploading file to Sanity:', { fileName: file.name, fileSize: file.size, fileType: file.type });
     
-    const asset = await sanityClient.assets.upload('image', file);
+    // Convert File to Buffer for Sanity upload
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    const asset = await sanityClient.assets.upload('image', buffer, {
+      filename: file.name,
+      contentType: file.type,
+    });
     console.log('Upload successful:', { assetId: asset._id, url: asset.url });
     
     return NextResponse.json({ assetId: asset._id, url: asset.url });

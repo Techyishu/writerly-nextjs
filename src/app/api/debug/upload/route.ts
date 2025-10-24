@@ -96,7 +96,15 @@ export async function POST(request: NextRequest) {
       if (file) {
         try {
           console.log('Attempting upload to Sanity...');
-          const asset = await sanityClient.assets.upload('image', file);
+          
+          // Convert File to Buffer for Sanity upload
+          const arrayBuffer = await file.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          
+          const asset = await sanityClient.assets.upload('image', buffer, {
+            filename: file.name,
+            contentType: file.type,
+          });
           console.log('Upload successful:', asset);
           
           results.tests.push({
