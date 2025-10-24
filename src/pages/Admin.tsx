@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { blogService, BlogPost } from '@/lib/supabase';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+import { blogService, BlogPost } from '@/lib/sanity';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { BlogHeader } from '@/components/BlogHeader';
+// DatabaseTest removed - test component no longer needed
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +40,7 @@ export default function Admin() {
 
   const togglePublished = async (post: BlogPost) => {
     try {
-      await blogService.updatePost(post.id, { published: !post.published });
+      await blogService.updatePost(post._id, { published: !post.published });
       loadPosts(); // Reload posts
     } catch (error) {
       console.error('Error toggling published status:', error);
@@ -91,6 +95,7 @@ export default function Admin() {
           </Link>
         </div>
 
+
         {loading ? (
           <div className="text-center py-12">
             <p className="text-white/70">Loading posts...</p>
@@ -111,7 +116,7 @@ export default function Admin() {
               </Card>
             ) : (
               posts.map((post) => (
-                <Card key={post.id} className="bg-white/10 backdrop-blur-sm border-white/20">
+                <Card key={post._id} className="bg-white/10 backdrop-blur-sm border-white/20">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -130,14 +135,14 @@ export default function Admin() {
                           <span className="text-white/50 text-sm">{post.readTime}</span>
                         </div>
                         <p className="text-white/50 text-sm">
-                          Created: {new Date(post.created).toLocaleDateString()}
+                          Created: {post.publishedAt && !isNaN(new Date(post.publishedAt).getTime()) ? new Date(post.publishedAt).toLocaleDateString() : 'No date'}
                         </p>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-2">
-                      <Link href={`/admin/posts/${post.id}/edit`}>
+                      <Link href={`/admin/posts/${post._id}/edit`}>
                         <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
@@ -164,7 +169,7 @@ export default function Admin() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => deletePost(post.id)}
+                        onClick={() => deletePost(post._id)}
                         className="border-red-400/50 text-red-300 hover:bg-red-400/10"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />

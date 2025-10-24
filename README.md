@@ -1,21 +1,21 @@
-# Writerly Blog - Next.js + Supabase
+# Writerly Blog - Next.js + Sanity
 
-A modern, beautiful blog platform built with Next.js 14, Supabase, and Tailwind CSS.
+A modern, beautiful blog platform built with Next.js 14, Sanity CMS, and Tailwind CSS.
 
 ## Features
 
 - 🎨 **Beautiful Design**: Modern, responsive design with cosmic background
 - 📝 **Blog Management**: Create, edit, and manage blog posts
-- 🔐 **Admin Panel**: Secure authentication and admin dashboard
-- 📊 **Analytics**: Visitor tracking and analytics
-- 🚀 **Performance**: Optimized for speed with Next.js
-- ☁️ **Deployment**: Ready for Vercel deployment
+- 🔐 **Admin Panel**: Secure admin interface for content management
+- 📱 **Mobile Responsive**: Optimized for all device sizes
+- ⚡ **Fast Performance**: Built with Next.js 14 and optimized for speed
+- 🎯 **SEO Optimized**: Meta tags and structured data for better search visibility
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14, React 19, TypeScript
 - **Styling**: Tailwind CSS, Radix UI
-- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Backend**: Sanity CMS (Content Management, Media Storage)
 - **Deployment**: Vercel
 
 ## Setup Instructions
@@ -27,15 +27,11 @@ cd writerly-nextjs
 npm install
 ```
 
-### 2. Set up Supabase
+### 2. Set up Sanity CMS
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to Settings > API to get your project URL and anon key
-3. Run the SQL schema in your Supabase SQL editor:
-
-```sql
--- Copy and paste the contents of supabase-schema.sql
-```
+1. Create a new project at [sanity.io](https://sanity.io)
+2. Get your project ID and API token
+3. Follow the setup guide in `SANITY_SETUP.md`
 
 ### 3. Environment Variables
 
@@ -44,29 +40,33 @@ npm install
 Create a `.env.local` file in the root directory:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_SANITY_PROJECT_ID=your-sanity-project-id
+NEXT_PUBLIC_SANITY_DATASET=production
+SANITY_API_TOKEN=your-sanity-api-token
 ```
 
-**To get your Supabase credentials:**
-1. Go to your Supabase project dashboard
-2. Navigate to Settings > API
-3. Copy the "Project URL" and "anon public" key
+**To get your Sanity credentials:**
+1. Go to your Sanity project dashboard
+2. Copy the "Project ID" from the project settings
+3. Generate an API token with Editor permissions
 4. Replace the placeholder values in your `.env.local` file
 
 **Example:**
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SANITY_PROJECT_ID=abc123def
+NEXT_PUBLIC_SANITY_DATASET=production
+SANITY_API_TOKEN=sk1234567890abcdef...
 ```
 
-### 4. Create Admin User
+### 4. Run Sanity Studio
 
-1. Go to your Supabase dashboard
-2. Navigate to Authentication > Users
-3. Create a new user with email and password
-4. Go to Table Editor > users
-5. Create a user record with the same email
+```bash
+cd sanity
+npm install
+npm run dev
+```
+
+This will start the Sanity Studio at `http://localhost:3333` where you can manage your content.
 
 ### 5. Run Development Server
 
@@ -74,74 +74,50 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000)
-
-## Deployment to Vercel
-
-### 1. Push to GitHub
-
-```bash
-git add .
-git commit -m "Initial commit"
-git push origin main
-```
-
-### 2. Deploy to Vercel
-
-1. Go to [vercel.com](https://vercel.com)
-2. Import your GitHub repository
-3. Add environment variables in Vercel dashboard
-4. Deploy!
-
-### 3. Set up Supabase Production
-
-1. Create a new Supabase project for production
-2. Run the same SQL schema
-3. Update environment variables in Vercel
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## Project Structure
 
 ```
-src/
-├── app/                 # Next.js app directory
-│   ├── api/            # API routes
-│   ├── admin/          # Admin pages
-│   ├── post/[slug]/    # Blog post pages
-│   └── page.tsx        # Home page
-├── components/         # React components
-│   ├── ui/            # UI components
-│   └── ...            # Other components
-├── contexts/          # React contexts
-├── hooks/             # Custom hooks
-├── lib/               # Utilities
-└── pages/             # Page components
+writerly-nextjs/
+├── src/
+│   ├── app/                 # Next.js 14 app directory
+│   ├── components/          # Reusable UI components
+│   ├── contexts/           # React contexts
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Utility functions and configurations
+│   └── pages/              # Page components
+├── sanity/                 # Sanity Studio configuration
+│   └── schemas/            # Sanity content schemas
+├── public/                 # Static assets
+└── package.json
 ```
 
-## Features
+## Admin Panel
 
-### Blog Features
-- Responsive design
-- Beautiful cosmic background
-- Blog post cards with categories
-- Reading time estimation
-- Featured posts
-- Search and filtering
+The admin panel is accessible at `/admin` and provides:
 
-### Admin Features
-- Secure authentication
-- Post creation and editing
-- Image upload
-- Publish/unpublish posts
-- Visitor analytics
-- User management
+- **Dashboard**: Overview of all blog posts
+- **Create Post**: Add new blog posts with rich content
+- **Edit Post**: Modify existing blog posts
+- **Post Management**: Publish/unpublish, feature posts
+- **Media Management**: Upload and manage images
 
-### Technical Features
-- Server-side rendering
-- API routes
-- Database integration
-- File storage
-- Real-time updates
-- SEO optimization
+## Deployment
+
+### Deploy to Vercel
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Add environment variables in Vercel dashboard:
+   - `NEXT_PUBLIC_SANITY_PROJECT_ID`
+   - `NEXT_PUBLIC_SANITY_DATASET`
+   - `SANITY_API_TOKEN`
+4. Deploy!
+
+### Deploy Sanity Studio
+
+The Sanity Studio can be deployed separately or run locally. For production, consider deploying it to Sanity's hosting or your own server.
 
 ## Contributing
 
@@ -152,4 +128,4 @@ src/
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is open source and available under the [MIT License](LICENSE).

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { sanityClient } from '@/lib/sanity';
 
 interface RouteParams {
   params: Promise<{
@@ -8,20 +8,56 @@ interface RouteParams {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { slug } = await params;
   try {
-    const { data: post, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('slug', slug)
-      .eq('published', true)
-      .single();
+    const { slug } = await params;
     
-    if (error) throw error;
+    const query = `*[_type == "post" && slug.current == $slug][0] {
+      _id,
+      title,
+      excerpt,
+      content,
+      slug,
+      category,
+      readTime,
+      featured,
+      published,
+      coverImage{
+        asset->{
+          _id,
+          url
+        }
+      },
+      publishedAt,
+      _createdAt,
+      _updatedAt
+    }`;
     
-    return NextResponse.json(post);
+    const post = await sanityClient.fetch(query, { slug });
+    
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+    
+    // Convert Sanity document to BlogPost format
+    const convertedPost = {
+      _id: post._id,
+      title: post.title || '',
+      excerpt: post.excerpt || '',
+      content: post.content || '',
+      slug: { current: post.slug?.current || '' },
+      category: post.category || '',
+      readTime: post.readTime || '',
+      featured: post.featured || false,
+      published: post.published || false,
+      coverImage: post.coverImage?.asset?.url || '',
+      publishedAt: post.publishedAt || new Date().toISOString(),
+      _createdAt: post._createdAt || new Date().toISOString(),
+      _updatedAt: post._updatedAt || new Date().toISOString(),
+    };
+    
+    return NextResponse.json(convertedPost);
   } catch (error) {
     console.error('Error fetching post:', error);
-    return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });
   }
 }

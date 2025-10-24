@@ -26,15 +26,20 @@ export const BlogCard = ({ title, excerpt, date, readTime, category, slug, image
             />
           </div>
         )}
-        <CardHeader>
-          <div className="mb-2 flex items-center gap-2">
-            <Badge variant="secondary" className="bg-purple-400/20 text-purple-300 text-xs">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="mb-2 flex flex-col sm:flex-row sm:items-center gap-2">
+            <Badge variant="secondary" className="bg-purple-400/20 text-purple-300 text-xs w-fit">
               {category}
             </Badge>
-            <div className="flex items-center gap-3 text-xs text-white/60">
+            <div className="flex items-center gap-2 sm:gap-3 text-xs text-white/60">
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                {date}
+                <span className="hidden sm:inline">{date}</span>
+                <span className="sm:hidden">
+                  {date && !isNaN(new Date(date).getTime()) 
+                    ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) 
+                    : 'No date'}
+                </span>
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
@@ -42,11 +47,11 @@ export const BlogCard = ({ title, excerpt, date, readTime, category, slug, image
               </span>
             </div>
           </div>
-          <CardTitle className="line-clamp-2 text-xl font-light text-white transition-colors group-hover:text-purple-300">
+          <CardTitle className="line-clamp-2 text-lg sm:text-xl font-light text-white transition-colors group-hover:text-purple-300">
             {title}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           <CardDescription className="line-clamp-3 text-sm leading-relaxed text-white/80">
             {excerpt}
           </CardDescription>

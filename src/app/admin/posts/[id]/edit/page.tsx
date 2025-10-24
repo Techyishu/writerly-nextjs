@@ -1,3 +1,5 @@
+"use client";
+
 import AdminPostForm from '@/pages/AdminPostForm';
 import AdminProtectedRoute from '@/components/AdminProtectedRoute';
 
@@ -7,11 +9,10 @@ interface PageProps {
   }>;
 }
 
-export default async function EditPostPage({ params }: PageProps) {
-  const { id } = await params;
+export default function EditPostPage({ params }: PageProps) {
   return (
     <AdminProtectedRoute>
-      <AdminPostForm id={id} />
+      <AdminPostForm />
     </AdminProtectedRoute>
   );
 }

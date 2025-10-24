@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+// Admin protection simplified for Sanity
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { BlogHeader } from '@/components/BlogHeader';
 import { Button } from '@/components/ui/button';
@@ -24,47 +24,15 @@ export default function AdminProtectedRoute({
   const [checkingAdmin, setCheckingAdmin] = useState(true);
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!isAuthenticated || !user) {
-        setIsAdmin(false);
-        setIsSuperAdmin(false);
-        setCheckingAdmin(false);
-        return;
-      }
-
-      try {
-        // Check if user is admin
-        const { data: adminCheck, error: adminError } = await supabase
-          .rpc('is_admin', { user_uuid: user.id });
-
-        if (adminError) {
-          console.error('Error checking admin status:', adminError);
-          setIsAdmin(false);
-          setIsSuperAdmin(false);
-        } else {
-          setIsAdmin(adminCheck || false);
-        }
-
-        // Check if user is super admin
-        const { data: superAdminCheck, error: superAdminError } = await supabase
-          .rpc('is_super_admin', { user_uuid: user.id });
-
-        if (superAdminError) {
-          console.error('Error checking super admin status:', superAdminError);
-          setIsSuperAdmin(false);
-        } else {
-          setIsSuperAdmin(superAdminCheck || false);
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        setIsAdmin(false);
-        setIsSuperAdmin(false);
-      } finally {
-        setCheckingAdmin(false);
-      }
-    };
-
-    checkAdminStatus();
+    // Check if user is admin based on their role
+    if (isAuthenticated && user) {
+      setIsAdmin(user.role === 'admin');
+      setIsSuperAdmin(user.role === 'admin');
+    } else {
+      setIsAdmin(false);
+      setIsSuperAdmin(false);
+    }
+    setCheckingAdmin(false);
   }, [isAuthenticated, user]);
 
   // Show loading state

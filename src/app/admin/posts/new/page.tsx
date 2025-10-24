@@ -1,3 +1,5 @@
+"use client";
+
 import AdminPostForm from '@/pages/AdminPostForm';
 import AdminProtectedRoute from '@/components/AdminProtectedRoute';
 

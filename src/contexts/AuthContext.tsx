@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, authService, supabase } from '@/lib/supabase';
+import { authService, User } from '@/lib/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -25,73 +25,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-
-    // Check if user is already authenticated
-    const getCurrentUser = async () => {
+    // Check if user is already authenticated (from localStorage)
+    const checkAuth = async () => {
       try {
         const currentUser = await authService.getCurrentUser();
-        if (isMounted) {
+        if (currentUser) {
           setUser(currentUser);
         }
       } catch (error) {
-        console.error('Error getting current user:', error);
+        console.error('Error checking auth:', error);
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     };
 
-    getCurrentUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!isMounted) return;
-
-        try {
-          if (session?.user) {
-            const userData = await authService.getCurrentUser();
-            setUser(userData);
-          } else {
-            setUser(null);
-          }
-        } catch (error) {
-          console.error('Error handling auth state change:', error);
-          setUser(null);
-        } finally {
-          setIsLoading(false);
-          setIsLoggingIn(false);
-        }
-      }
-    );
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
+    checkAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<void> => {
-    if (isLoggingIn) {
-      throw new Error('Login already in progress');
-    }
-
     setIsLoggingIn(true);
-    
     try {
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Login timeout')), 10000);
-      });
-
-      const loginPromise = authService.login(email, password);
-      const userData = await Promise.race([loginPromise, timeoutPromise]);
-      
-      setUser(userData);
+      const response = await authService.login(email, password);
+      if (response.user) {
+        setUser(response.user);
+        // Store user in localStorage for persistence
+        localStorage.setItem('writerly_user', JSON.stringify(response.user));
+      } else {
+        throw new Error(response.error || 'Login failed');
+      }
     } catch (error) {
-      setUser(null);
+      console.error('Login error:', error);
       throw error;
     } finally {
       setIsLoggingIn(false);
@@ -99,24 +62,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (email: string, password: string, name: string): Promise<void> => {
-    if (isLoggingIn) {
-      throw new Error('Registration already in progress');
-    }
-
     setIsLoggingIn(true);
-    
     try {
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Registration timeout')), 10000);
-      });
-
-      const registerPromise = authService.register(email, password, name);
-      const userData = await Promise.race([registerPromise, timeoutPromise]);
-      
-      setUser(userData);
+      const response = await authService.register(email, password, name);
+      if (response.user) {
+        setUser(response.user);
+        localStorage.setItem('writerly_user', JSON.stringify(response.user));
+      } else {
+        throw new Error(response.error || 'Registration failed');
+      }
     } catch (error) {
-      setUser(null);
+      console.error('Registration error:', error);
       throw error;
     } finally {
       setIsLoggingIn(false);
@@ -127,10 +83,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.logout();
       setUser(null);
+      localStorage.removeItem('writerly_user');
     } catch (error) {
-      console.error('Error logging out:', error);
-      // Force logout even if API fails
-      setUser(null);
+      console.error('Logout error:', error);
     }
   };
 
@@ -144,10 +99,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');

@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { BlogHeader } from '@/components/BlogHeader';
 import { Button } from '@/components/ui/button';
@@ -20,30 +23,14 @@ export default function AdminLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent multiple submissions
-    if (isLoggingIn) {
-      return;
-    }
+    if (isLoggingIn) return;
 
     try {
       await login(email, password);
       toast.success('Login successful!');
       router.push('/admin');
     } catch (error: any) {
-      // Handle specific error messages
-      let errorMessage = 'Login failed';
-      
-      if (error.message?.includes('timeout')) {
-        errorMessage = 'Login timed out. Please try again.';
-      } else if (error.message?.includes('already in progress')) {
-        errorMessage = 'Login already in progress. Please wait.';
-      } else if (error.message?.includes('Invalid login credentials')) {
-        errorMessage = 'Invalid email or password.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+      toast.error(error.message || 'Login failed');
     }
   };
 

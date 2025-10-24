@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { blogService, BlogPost } from '@/lib/supabase';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+import { blogService, BlogPost } from '@/lib/sanity';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { BlogHeader } from '@/components/BlogHeader';
 import { Button } from '@/components/ui/button';
@@ -42,12 +45,13 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
     title: '',
     excerpt: '',
     content: '',
-    slug: '',
+    slug: { current: '' },
     category: '',
-    read_time: '',
+    readTime: '',
     published: false,
     featured: false,
-    cover_image: '',
+    coverImage: '',
+    // Author fields removed - using constant avatar from assets
   });
 
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
@@ -71,7 +75,7 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
     try {
       setIsLoadingPost(true);
       const posts = await blogService.getAllPosts();
-      const post = posts.find(p => p.id === postId);
+      const post = posts.find(p => p._id === postId);
       
       if (post) {
         setFormData({
@@ -80,13 +84,13 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
           content: post.content,
           slug: post.slug,
           category: post.category,
-          read_time: post.read_time,
+          readTime: post.readTime,
           published: post.published,
           featured: post.featured,
-          cover_image: post.cover_image || '',
+          coverImage: typeof post.coverImage === 'string' ? post.coverImage : '',
         });
-        if (post.cover_image) {
-          setCoverImagePreview(post.cover_image);
+        if (post.coverImage && typeof post.coverImage === 'string') {
+          setCoverImagePreview(post.coverImage);
         }
       } else {
         toast.error('Post not found');
@@ -113,7 +117,7 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
     setFormData(prev => ({
       ...prev,
       [field]: value,
-      ...(field === 'title' && typeof value === 'string' ? { slug: generateSlug(value) } : {})
+      ...(field === 'title' && typeof value === 'string' ? { slug: { current: generateSlug(value) } } : {})
     }));
   };
 
@@ -132,7 +136,7 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
   const removeCoverImage = () => {
     setCoverImageFile(null);
     setCoverImagePreview('');
-    setFormData(prev => ({ ...prev, cover_image: '' }));
+    setFormData(prev => ({ ...prev, coverImage: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,24 +148,36 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
       
       // Upload cover image if a new file is selected
       if (coverImageFile) {
-        console.log('Uploading image...');
-        const imageUrl = await blogService.uploadFile(coverImageFile);
-        finalFormData.cover_image = imageUrl;
-        console.log('Image uploaded:', imageUrl);
+        console.log('Starting image upload...');
+        const imageUrl = await blogService.uploadImage(coverImageFile);
+        console.log('Image upload result:', imageUrl);
+        if (!imageUrl) {
+          throw new Error('Image upload failed');
+        }
+        // For Sanity, we'll store the image URL as a string for now
+        // In production, you'd want to upload to Sanity and get the asset reference
+        finalFormData.coverImage = imageUrl;
       }
 
-      console.log('Creating post with data:', finalFormData);
+      console.log('Saving post to database...');
 
       if (isEditing && id) {
-        await blogService.updatePost(id, finalFormData);
+        const result = await blogService.updatePost(id, finalFormData);
+        console.log('Post updated:', result);
         toast.success('Post updated successfully!');
       } else {
-        await blogService.createPost(finalFormData);
+        const result = await blogService.createPost(finalFormData);
+        console.log('Post created:', result);
         toast.success('Post created successfully!');
       }
       router.push('/admin');
     } catch (error: any) {
-      console.error('Error creating post:', error);
+      console.error('Error saving post:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       toast.error(error.message || 'Error saving post');
     } finally {
       setIsLoading(false);
@@ -232,8 +248,8 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
                   <Label htmlFor="slug" className="text-white">Slug</Label>
                   <Input
                     id="slug"
-                    value={formData.slug}
-                    onChange={(e) => handleInputChange('slug', e.target.value)}
+                    value={formData.slug.current}
+                    onChange={(e) => setFormData(prev => ({ ...prev, slug: { current: e.target.value } }))}
                     placeholder="post-url-slug"
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                     required
@@ -295,9 +311,9 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
                     <SelectTrigger className="bg-white/10 border-white/20 text-white">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-gray-900 border-white/20 text-white">
                       {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
+                        <SelectItem key={category} value={category} className="text-white hover:bg-purple-400/20 focus:bg-purple-400/20">
                           {category}
                         </SelectItem>
                       ))}
@@ -306,11 +322,11 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="read_time" className="text-white">Read Time</Label>
+                  <Label htmlFor="readTime" className="text-white">Read Time</Label>
                   <Input
-                    id="read_time"
-                    value={formData.read_time}
-                    onChange={(e) => handleInputChange('read_time', e.target.value)}
+                    id="readTime"
+                    value={formData.readTime}
+                    onChange={(e) => handleInputChange('readTime', e.target.value)}
                     placeholder="5 min read"
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                     required
@@ -337,18 +353,22 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
                     id="published"
                     checked={formData.published}
                     onCheckedChange={(checked) => handleInputChange('published', checked)}
+                    className="data-[state=checked]:bg-purple-400 data-[state=unchecked]:bg-white/20"
                   />
                   <Label htmlFor="published" className="text-white">Published</Label>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="featured"
-                    checked={formData.featured}
-                    onCheckedChange={(checked) => handleInputChange('featured', checked)}
-                  />
-                  <Label htmlFor="featured" className="text-white">Featured</Label>
-                </div>
+              {/* Author avatar is constant - using assets folder */}
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="featured"
+                  checked={formData.featured}
+                  onCheckedChange={(checked) => handleInputChange('featured', checked)}
+                  className="data-[state=checked]:bg-purple-400 data-[state=unchecked]:bg-white/20"
+                />
+                <Label htmlFor="featured" className="text-white">Featured</Label>
+              </div>
               </div>
 
               <div className="flex justify-end space-x-4">

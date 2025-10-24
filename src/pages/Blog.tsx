@@ -5,7 +5,7 @@ import { BlogHeader } from "@/components/BlogHeader";
 import { BlogCard } from "@/components/BlogCard";
 import { HeroSection } from "@/components/HeroSection";
 import { CosmicBackground } from "@/components/CosmicBackground";
-import { blogService, BlogPost } from "@/lib/supabase";
+import { blogService, BlogPost } from "@/lib/sanity";
 
 export default function Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -25,88 +25,88 @@ export default function Blog() {
       // Fallback to static data if PocketBase is not available
       setPosts([
         {
-          id: '1',
+          _id: '1',
           title: "Whispers in the Dark",
           excerpt: "In the depths of night, when silence reigns supreme, the old manor house awakens with stories untold. Every creak of the floorboards echoes with memories of those who walked these halls before.",
           content: "",
-          date: "Oct 21, 2025",
           readTime: "5 min read",
           category: "Mystery",
-          slug: "whispers-in-the-dark",
+          slug: { current: "whispers-in-the-dark" },
           featured: false,
           published: true,
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+          _createdAt: new Date().toISOString(),
+          _updatedAt: new Date().toISOString(),
         },
         {
-          id: '2',
+          _id: '2',
           title: "The Last Letter",
           excerpt: "She found it tucked between the pages of an ancient book, yellowed with age and sealed with wax. The handwriting was elegant, deliberate, belonging to someone who knew their words would outlive them.",
           content: "",
-          date: "Oct 18, 2025",
           readTime: "7 min read",
           category: "Fiction",
-          slug: "the-last-letter",
+          slug: { current: "the-last-letter" },
           featured: false,
           published: true,
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+          _createdAt: new Date().toISOString(),
+          _updatedAt: new Date().toISOString(),
         },
         {
-          id: '3',
+          _id: '3',
           title: "Moonlit Confessions",
           excerpt: "Under the silver glow of the autumn moon, secrets have a way of spilling forth like water from a broken dam. Tonight was no different, as two souls found themselves sharing truths they'd kept buried for years.",
           content: "",
-          date: "Oct 15, 2025",
           readTime: "6 min read",
           category: "Romance",
-          slug: "moonlit-confessions",
+          slug: { current: "moonlit-confessions" },
           featured: false,
           published: true,
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+          _createdAt: new Date().toISOString(),
+          _updatedAt: new Date().toISOString(),
         },
         {
-          id: '4',
+          _id: '4',
           title: "The Forgotten Library",
           excerpt: "Deep beneath the city streets lies a collection that time forgot. Books that were never meant to be read, stories too dangerous to tell, and knowledge that could reshape our understanding of reality itself.",
           content: "",
-          date: "Oct 12, 2025",
           readTime: "8 min read",
           category: "Fantasy",
-          slug: "the-forgotten-library",
+          slug: { current: "the-forgotten-library" },
           featured: false,
           published: true,
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+          _createdAt: new Date().toISOString(),
+          _updatedAt: new Date().toISOString(),
         },
         {
-          id: '5',
+          _id: '5',
           title: "Echoes of Yesterday",
           excerpt: "Memory is a peculiar thing, fluid and unreliable. But in this small town, memories don't fade—they linger, they haunt, and sometimes, they come back to change everything.",
           content: "",
-          date: "Oct 9, 2025",
           readTime: "5 min read",
           category: "Drama",
-          slug: "echoes-of-yesterday",
+          slug: { current: "echoes-of-yesterday" },
           featured: false,
           published: true,
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+          _createdAt: new Date().toISOString(),
+          _updatedAt: new Date().toISOString(),
         },
         {
-          id: '6',
+          _id: '6',
           title: "The Midnight Poet",
           excerpt: "In a world where words hold power, one writer discovers that their late-night compositions have begun manifesting in reality. What starts as wonder quickly becomes a race against their own imagination.",
           content: "",
-          date: "Oct 6, 2025",
           readTime: "9 min read",
           category: "Thriller",
-          slug: "the-midnight-poet",
+          slug: { current: "the-midnight-poet" },
           featured: false,
           published: true,
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+          _createdAt: new Date().toISOString(),
+          _updatedAt: new Date().toISOString(),
         },
       ]);
     } finally {
@@ -129,11 +129,11 @@ export default function Blog() {
       <CosmicBackground>
         <main className="container mx-auto px-4 py-16">
           {/* Section Title */}
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-4xl font-light tracking-wide md:text-5xl text-white">
+          <div className="mb-8 sm:mb-12 text-center px-4">
+            <h2 className="mb-4 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light tracking-wide text-white">
               Latest <span className="text-purple-400">Stories</span>
             </h2>
-            <p className="mx-auto max-w-2xl text-lg text-white/70">
+            <p className="mx-auto max-w-2xl text-base sm:text-lg text-white/70">
               Explore the collection of tales that blur the lines between dreams and reality.
             </p>
           </div>
@@ -144,17 +144,17 @@ export default function Blog() {
             <p className="text-white/70">Loading posts...</p>
           </div>
         ) : (
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 lg:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map((post) => (
               <BlogCard 
-                key={post.id} 
+                key={post._id} 
                 title={post.title}
                 excerpt={post.excerpt}
-                date={new Date(post.created).toLocaleDateString()}
+                date={post.publishedAt && !isNaN(new Date(post.publishedAt).getTime()) ? new Date(post.publishedAt).toLocaleDateString() : 'No date'}
                 readTime={post.readTime}
                 category={post.category}
-                slug={post.slug}
-                image={post.cover_image}
+                slug={post.slug.current}
+                image={typeof post.coverImage === 'string' && post.coverImage.trim() !== '' ? post.coverImage : undefined}
               />
             ))}
           </div>

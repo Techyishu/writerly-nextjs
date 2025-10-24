@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import logoImage from "@/assets/WhatsApp Image 2025-10-21 at 1.22.36 AM.jpeg";
-import { VisitorCounter } from "@/components/VisitorCounter";
+// VisitorCounter removed - general visitor tracking disabled
 
 export const BlogHeader = () => {
   const pathname = usePathname();
@@ -46,7 +46,7 @@ export const BlogHeader = () => {
           </Link>
           
           {/* Visitor Counter */}
-          <VisitorCounter className="hidden lg:flex" />
+          {/* VisitorCounter removed - general visitor tracking disabled */}
           
           <Link href="/admin/login">
             <Button variant="outline" size="sm" className="border-purple-400/50 hover:bg-purple-400/10 text-white">

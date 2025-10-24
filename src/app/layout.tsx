@@ -4,11 +4,11 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { VisitorTracker } from '@/components/VisitorTracker';
+// VisitorTracker removed - general visitor tracking disabled
 
 export const metadata: Metadata = {
   title: 'Writerly - A Modern Blog Platform',
-  description: 'A beautiful, modern blog platform built with Next.js and Supabase',
+  description: 'A beautiful, modern blog platform built with Next.js and Sanity',
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <VisitorTracker />
+            {/* VisitorTracker removed - general visitor tracking disabled */}
             {children}
           </TooltipProvider>
         </AuthProvider>

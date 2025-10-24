@@ -1,3 +1,5 @@
+"use client";
+
 import Admin from '@/pages/Admin';
 import AdminProtectedRoute from '@/components/AdminProtectedRoute';
 
