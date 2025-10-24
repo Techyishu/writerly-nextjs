@@ -7,7 +7,7 @@ export const sanityClient = createClient({
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
   useCdn: process.env.NODE_ENV === 'production',
   apiVersion: '2024-10-24',
-  token: process.env.NEXT_PUBLIC_SANITY_API_TOKEN || process.env.SANITY_API_TOKEN, // For write operations
+  token: process.env.SANITY_API_TOKEN, // For write operations - server-side only
 })
 
 // Image URL builder

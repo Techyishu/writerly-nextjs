@@ -17,10 +17,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    // Check if Sanity configuration is available
+    if (!process.env.SANITY_API_TOKEN) {
+      console.error('SANITY_API_TOKEN is not configured');
+      return NextResponse.json({ error: 'Sanity configuration missing' }, { status: 500 });
+    }
+
+    if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || !process.env.NEXT_PUBLIC_SANITY_DATASET) {
+      console.error('Sanity project configuration is missing');
+      return NextResponse.json({ error: 'Sanity project configuration missing' }, { status: 500 });
+    }
+
+    console.log('Uploading file to Sanity:', { fileName: file.name, fileSize: file.size, fileType: file.type });
+    
     const asset = await sanityClient.assets.upload('image', file);
+    console.log('Upload successful:', { assetId: asset._id, url: asset.url });
+    
     return NextResponse.json({ assetId: asset._id, url: asset.url });
   } catch (error) {
     console.error('Error uploading image:', error);
-    return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to upload image',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
