@@ -32,7 +32,7 @@ function convertToBlogPost(doc: any) {
 
 export async function GET(request: NextRequest) {
   try {
-    const query = `*[_type == "post"] | order(publishedAt desc) {
+    const query = `*[_type == "post" && published == true] | order(publishedAt desc) {
       _id,
       title,
       excerpt,

@@ -11,7 +11,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
     
-    const query = `*[_type == "post" && slug.current == $slug][0] {
+    const query = `*[_type == "post" && slug.current == $slug && published == true][0] {
       _id,
       title,
       excerpt,

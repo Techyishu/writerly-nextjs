@@ -4,18 +4,26 @@ import { authenticateRequest } from '@/lib/auth-middleware';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Upload request received');
+    
     // Check authentication
     const authResult = await authenticateRequest(request);
     if (!authResult.user) {
+      console.log('Authentication failed');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    console.log('Authentication successful');
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
     
     if (!file) {
+      console.log('No file provided');
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
+
+    console.log('File received:', { fileName: file.name, fileSize: file.size, fileType: file.type });
 
     // Check if Sanity configuration is available
     if (!process.env.SANITY_API_TOKEN) {
@@ -34,6 +42,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
+    console.log('Sanity configuration verified');
     console.log('Uploading file to Sanity:', { fileName: file.name, fileSize: file.size, fileType: file.type });
     
     const asset = await sanityClient.assets.upload('image', file);
@@ -42,9 +51,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ assetId: asset._id, url: asset.url });
   } catch (error) {
     console.error('Error uploading image:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json({ 
       error: 'Failed to upload image',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
     }, { status: 500 });
   }
 }
