@@ -107,7 +107,9 @@ export const blogService = {
   // Get all posts (for admin)
   async getAllPosts(): Promise<BlogPost[]> {
     try {
-      const response = await fetch('/api/admin/posts');
+      const response = await fetch('/api/admin/posts', {
+        credentials: 'include', // Include cookies for authentication
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch posts');
       }
@@ -146,6 +148,7 @@ export const blogService = {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (!response.ok) {
@@ -169,6 +172,7 @@ export const blogService = {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (!response.ok) {
@@ -188,6 +192,7 @@ export const blogService = {
     try {
       const response = await fetch(`/api/admin/posts/${id}`, {
         method: 'DELETE',
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (!response.ok) {
@@ -210,10 +215,13 @@ export const blogService = {
       const response = await fetch('/api/admin/upload', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Upload failed:', errorData);
+        throw new Error(errorData.details || 'Failed to upload image');
       }
 
       const result = await response.json();
