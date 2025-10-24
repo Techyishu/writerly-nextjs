@@ -16,14 +16,14 @@ const users: User[] = [
   {
     id: '1',
     name: 'Admin User',
-    email: process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@writerly.com',
+    email: process.env.ADMIN_EMAIL || 'admin@writerly.com',
     role: 'admin'
   }
 ];
 
 // Simple password storage (in production, use proper hashing)
 const passwords: Record<string, string> = {
-  [process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@writerly.com']: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123'
+  [process.env.ADMIN_EMAIL || 'admin@writerly.com']: process.env.ADMIN_PASSWORD || 'admin123'
 };
 
 export const authService = {

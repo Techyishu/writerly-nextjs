@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sanityClient } from '@/lib/sanity';
+import { authenticateRequest } from '@/lib/auth-middleware';
 
 interface RouteParams {
   params: Promise<{
@@ -38,6 +39,12 @@ function convertToBlogPost(doc: any) {
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // Check authentication
+    const authResult = await authenticateRequest(request);
+    if (!authResult.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const data = await request.json();
     
@@ -82,6 +89,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // Check authentication
+    const authResult = await authenticateRequest(request);
+    if (!authResult.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     await sanityClient.delete(id);
     return NextResponse.json({ success: true });

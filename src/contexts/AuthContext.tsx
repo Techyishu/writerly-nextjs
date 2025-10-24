@@ -25,12 +25,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
-    // Check if user is already authenticated (from localStorage)
+    // Check if user is already authenticated (from server)
     const checkAuth = async () => {
       try {
-        const currentUser = await authService.getCurrentUser();
-        if (currentUser) {
-          setUser(currentUser);
+        const response = await fetch('/api/auth/login', {
+          method: 'GET',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user) {
+            setUser(data.user);
+            // Store user in localStorage for persistence
+            localStorage.setItem('writerly_user', JSON.stringify(data.user));
+          }
         }
       } catch (error) {
         console.error('Error checking auth:', error);
@@ -45,13 +53,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoggingIn(true);
     try {
-      const response = await authService.login(email, password);
-      if (response.user) {
-        setUser(response.user);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      if (data.success && data.user) {
+        setUser(data.user);
         // Store user in localStorage for persistence
-        localStorage.setItem('writerly_user', JSON.stringify(response.user));
+        localStorage.setItem('writerly_user', JSON.stringify(data.user));
       } else {
-        throw new Error(response.error || 'Login failed');
+        throw new Error('Login failed');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -81,7 +102,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      await authService.logout();
+      await fetch('/api/auth/login', {
+        method: 'DELETE',
+      });
       setUser(null);
       localStorage.removeItem('writerly_user');
     } catch (error) {

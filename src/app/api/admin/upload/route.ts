@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sanityClient } from '@/lib/sanity';
+import { authenticateRequest } from '@/lib/auth-middleware';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const authResult = await authenticateRequest(request);
+    if (!authResult.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     
