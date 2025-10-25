@@ -141,6 +141,13 @@ export default defineType({
       type: 'datetime',
       initialValue: () => new Date().toISOString(),
     }),
+    defineField({
+      name: 'viewCount',
+      title: 'View Count',
+      type: 'number',
+      initialValue: 0,
+      validation: (Rule) => Rule.min(0),
+    }),
   ],
   preview: {
     select: {

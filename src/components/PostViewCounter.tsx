@@ -1,6 +1,7 @@
 "use client";
 
 import { Eye } from 'lucide-react';
+import { usePostTracking } from '@/hooks/usePostTracking';
 
 interface PostViewCounterProps {
   postId: string;
@@ -13,11 +14,12 @@ export const PostViewCounter = ({
   className = '', 
   showIcon = true 
 }: PostViewCounterProps) => {
-  // Temporarily disabled during Sanity migration
+  const { viewCount } = usePostTracking(postId);
+
   return (
     <div className={`flex items-center gap-1 text-sm text-gray-600 ${className}`}>
       {showIcon && <Eye className="h-4 w-4" />}
-      <span>Views disabled</span>
+      <span>{viewCount} views</span>
     </div>
   );
 };

@@ -23,6 +23,7 @@ function convertToBlogPost(doc: any) {
     readTime: doc.readTime || '',
     featured: doc.featured || false,
     published: doc.published || false,
+    viewCount: doc.viewCount || 0,
     coverImage: coverImageUrl,
     publishedAt: doc.publishedAt || new Date().toISOString(),
     _createdAt: doc._createdAt || new Date().toISOString(),
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest) {
       readTime,
       featured,
       published,
+      viewCount,
       coverImage{
         asset->{
           _id,

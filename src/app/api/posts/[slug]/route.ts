@@ -21,6 +21,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       readTime,
       featured,
       published,
+      viewCount,
       coverImage{
         asset->{
           _id,
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       readTime: post.readTime || '',
       featured: post.featured || false,
       published: post.published || false,
+      viewCount: post.viewCount || 0,
       coverImage: post.coverImage?.asset?.url || '',
       publishedAt: post.publishedAt || new Date().toISOString(),
       _createdAt: post._createdAt || new Date().toISOString(),
