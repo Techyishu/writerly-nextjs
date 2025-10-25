@@ -23,14 +23,16 @@ export async function POST(request: NextRequest) {
         .commit();
     } catch (sanityError) {
       console.warn('Sanity feedback update failed, using fallback storage:', sanityError);
-      const current = feedbackCounts.get(postId) || { positive: 0, negative: 0 };
-      if (type === 'positive') {
-        current.positive++;
-      } else {
-        current.negative++;
-      }
-      feedbackCounts.set(postId, current);
     }
+
+    // Always use fallback storage for now (like comments)
+    const current = feedbackCounts.get(postId) || { positive: 0, negative: 0 };
+    if (type === 'positive') {
+      current.positive++;
+    } else {
+      current.negative++;
+    }
+    feedbackCounts.set(postId, current);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -52,7 +54,7 @@ export async function GET(request: NextRequest) {
       const query = `*[_type == "post" && _id == $postId][0] { positiveFeedback, negativeFeedback }`;
       const result = await sanityClient.fetch(query, { postId });
       
-      if (result) {
+      if (result && (result.positiveFeedback > 0 || result.negativeFeedback > 0)) {
         return NextResponse.json({ 
           positive: result.positiveFeedback || 0,
           negative: result.negativeFeedback || 0
@@ -62,6 +64,7 @@ export async function GET(request: NextRequest) {
       console.warn('Sanity feedback read failed, using fallback storage:', sanityError);
     }
 
+    // Always use fallback storage for now (like comments)
     const fallback = feedbackCounts.get(postId) || { positive: 0, negative: 0 };
     return NextResponse.json(fallback);
   } catch (error) {

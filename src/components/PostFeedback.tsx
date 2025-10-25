@@ -38,7 +38,7 @@ export const PostFeedback = ({ postId, className = '' }: PostFeedbackProps) => {
   }, [postId]);
 
   const handleVote = async (type: 'positive' | 'negative') => {
-    if (isSubmitting || userVote === type) return;
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
     try {
@@ -51,20 +51,23 @@ export const PostFeedback = ({ postId, className = '' }: PostFeedbackProps) => {
       });
 
       if (response.ok) {
+        const previousVote = userVote;
         setUserVote(type);
         localStorage.setItem(`feedback_${postId}`, type);
         
         if (type === 'positive') {
           setPositiveCount(prev => prev + 1);
-          if (userVote === 'negative') {
+          if (previousVote === 'negative') {
             setNegativeCount(prev => prev - 1);
           }
         } else {
           setNegativeCount(prev => prev + 1);
-          if (userVote === 'positive') {
+          if (previousVote === 'positive') {
             setPositiveCount(prev => prev - 1);
           }
         }
+      } else {
+        console.error('Failed to submit feedback:', response.status);
       }
     } catch (error) {
       console.error('Error submitting feedback:', error);

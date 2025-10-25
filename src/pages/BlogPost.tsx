@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
 import logoImage from "@/assets/WhatsApp Image 2025-10-21 at 1.21.30 AM.jpeg";
 import { PostFeedback } from '@/components/PostFeedback';
+import { CommentBox } from '@/components/CommentBox';
 
 interface BlogPostProps {
   slug: string;
@@ -248,6 +249,10 @@ export default function BlogPost({ slug }: BlogPostProps) {
 
             <div className="mt-12">
               <PostFeedback postId={post._id} />
+            </div>
+
+            <div className="mt-8">
+              <CommentBox postId={post._id} />
             </div>
 
             {/* Article Footer */}

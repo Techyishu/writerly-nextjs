@@ -162,6 +162,37 @@ export default defineType({
       initialValue: 0,
       validation: (Rule) => Rule.min(0),
     }),
+    defineField({
+      name: 'comments',
+      title: 'Comments',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'name',
+              title: 'Commenter Name',
+              type: 'string',
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: 'comment',
+              title: 'Comment',
+              type: 'text',
+              rows: 3,
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: 'createdAt',
+              title: 'Created At',
+              type: 'datetime',
+              initialValue: () => new Date().toISOString(),
+            }),
+          ],
+        },
+      ],
+    }),
   ],
   preview: {
     select: {

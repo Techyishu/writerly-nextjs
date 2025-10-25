@@ -7,8 +7,21 @@ import { AuthProvider } from '@/contexts/AuthContext';
 // VisitorTracker removed - general visitor tracking disabled
 
 export const metadata: Metadata = {
-  title: 'Writerly - A Modern Blog Platform',
-  description: 'A beautiful, modern blog platform built with Next.js and Sanity',
+  title: 'Aruna\'s Blog - Stories That Inspire',
+  description: 'Explore captivating stories and insights on Aruna\'s Blog. Discover tales that blur the lines between dreams and reality.',
+  keywords: 'blog, stories, inspiration, writing, tales, Aruna, creative writing',
+  authors: [{ name: 'Aruna' }],
+  openGraph: {
+    title: 'Aruna\'s Blog - Stories That Inspire',
+    description: 'Explore captivating stories and insights on Aruna\'s Blog. Discover tales that blur the lines between dreams and reality.',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Aruna\'s Blog - Stories That Inspire',
+    description: 'Explore captivating stories and insights on Aruna\'s Blog. Discover tales that blur the lines between dreams and reality.',
+  },
 };
 
 export default function RootLayout({
