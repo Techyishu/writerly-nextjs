@@ -1,13 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sanityClient } from '@/lib/sanity';
+import fs from 'fs';
+import path from 'path';
 
-// Global comments storage (persists during server session)
-const comments = new Map<string, Array<{
-  id: string;
-  name: string;
-  comment: string;
-  createdAt: string;
-}>>();
+const DATA_FILE = path.join(process.cwd(), 'data', 'comments.json');
+
+// Ensure data directory exists
+if (!fs.existsSync(path.dirname(DATA_FILE))) {
+  fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
+}
+
+// Load data from file
+function loadCommentsData() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const data = fs.readFileSync(DATA_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading comments data:', error);
+  }
+  return {};
+}
+
+// Save data to file
+function saveCommentsData(data: any) {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Error saving comments data:', error);
+  }
+}
+
+let comments = loadCommentsData();
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,20 +54,21 @@ export async function POST(request: NextRequest) {
       await sanityClient
         .patch(postId)
         .append('comments', [{
-          _type: 'comment',
+          _type: 'object',
           name: newComment.name,
           comment: newComment.comment,
           createdAt: newComment.createdAt,
         }])
         .commit();
+      console.log('Comment saved to Sanity successfully');
     } catch (sanityError) {
       console.warn('Sanity comment update failed, using fallback storage:', sanityError);
+      // Fallback to file storage
+      const postComments = comments[postId] || [];
+      postComments.push(newComment);
+      comments[postId] = postComments;
+      saveCommentsData(comments);
     }
-
-    // Always use fallback storage for now
-    const postComments = comments.get(postId) || [];
-    postComments.push(newComment);
-    comments.set(postId, postComments);
 
     return NextResponse.json({ success: true, comment: newComment });
   } catch (error) {
@@ -70,20 +96,23 @@ export async function GET(request: NextRequest) {
       }`;
       const result = await sanityClient.fetch(query, { postId });
       
-      if (result?.comments) {
+      if (result?.comments && result.comments.length > 0) {
         const formattedComments = result.comments.map((comment: any, index: number) => ({
           id: `${postId}_${index}`,
           name: comment.name,
           comment: comment.comment,
           createdAt: comment.createdAt,
         }));
+        console.log('Comments loaded from Sanity:', formattedComments.length);
         return NextResponse.json({ comments: formattedComments });
       }
     } catch (sanityError) {
       console.warn('Sanity comment read failed, using fallback storage:', sanityError);
     }
 
-    const postComments = comments.get(postId) || [];
+    // Fallback to file storage
+    const postComments = comments[postId] || [];
+    console.log('Using fallback comments:', postComments.length);
     return NextResponse.json({ comments: postComments });
   } catch (error) {
     console.error('Error fetching comments:', error);
