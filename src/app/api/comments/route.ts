@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
       .patch(postId)
       .setIfMissing({ comments: [] })
       .append('comments', [{
-        _type: 'object',
         name: newComment.name,
         comment: newComment.comment,
         createdAt: newComment.createdAt,
@@ -46,15 +45,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
     }
 
-    // Get comments from Sanity - try a different approach
-    const query = `*[_type == "post" && _id == $postId][0]`;
+    // Get comments from Sanity
+    const query = `*[_type == "post" && _id == $postId][0] { 
+      "comments": comments[] {
+        name,
+        comment,
+        createdAt
+      }
+    }`;
     const result = await sanityClient.fetch(query, { postId });
     
-    console.log('Full post data from Sanity:', JSON.stringify(result, null, 2));
+    console.log('Sanity query result for comments:', result);
     
     if (result?.comments && result.comments.length > 0) {
       const formattedComments = result.comments.map((comment: any, index: number) => ({
-        id: `${postId}_${index}`,
+        id: `${postId}_${index}`, // Generate a unique client-side ID
         name: comment.name,
         comment: comment.comment,
         createdAt: comment.createdAt,
