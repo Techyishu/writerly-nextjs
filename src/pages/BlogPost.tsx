@@ -13,6 +13,7 @@ import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
 import logoImage from "@/assets/WhatsApp Image 2025-10-21 at 1.21.30 AM.jpeg";
 import { PostFeedback } from '@/components/PostFeedback';
 import { CommentBox } from '@/components/CommentBox';
+import { SimpleSocialShare } from '@/components/SimpleSocialShare';
 
 interface BlogPostProps {
   slug: string;
@@ -239,6 +240,15 @@ export default function BlogPost({ slug }: BlogPostProps) {
               </div>
             )}
 
+            {/* Social Share Buttons */}
+            <div className="mb-8 flex justify-center">
+              <SimpleSocialShare 
+                title={post.title}
+                url={`${typeof window !== 'undefined' ? window.location.origin : ''}/post/${post.slug.current}`}
+                description={post.excerpt}
+              />
+            </div>
+
             {/* Content */}
             <div className="prose prose-lg prose-invert max-w-none">
               <div 
@@ -247,7 +257,7 @@ export default function BlogPost({ slug }: BlogPostProps) {
               />
             </div>
 
-            <div className="mt-12">
+            <div className="mt-8">
               <PostFeedback postId={post._id} />
             </div>
 
