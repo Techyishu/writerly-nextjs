@@ -24,6 +24,8 @@ function convertToBlogPost(doc: any) {
     featured: doc.featured || false,
     published: doc.published || false,
     viewCount: doc.viewCount || 0,
+    positiveFeedback: doc.positiveFeedback || 0,
+    negativeFeedback: doc.negativeFeedback || 0,
     coverImage: coverImageUrl,
     publishedAt: doc.publishedAt || new Date().toISOString(),
     _createdAt: doc._createdAt || new Date().toISOString(),
@@ -44,6 +46,8 @@ export async function GET(request: NextRequest) {
       featured,
       published,
       viewCount,
+      positiveFeedback,
+      negativeFeedback,
       coverImage{
         asset->{
           _id,

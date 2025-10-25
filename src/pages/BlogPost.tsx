@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
 import logoImage from "@/assets/WhatsApp Image 2025-10-21 at 1.21.30 AM.jpeg";
+import { PostFeedback } from '@/components/PostFeedback';
 
 interface BlogPostProps {
   slug: string;
@@ -243,6 +244,10 @@ export default function BlogPost({ slug }: BlogPostProps) {
                 className="text-white/90 leading-relaxed whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{ __html: renderSanityContent(post.content) }}
               />
+            </div>
+
+            <div className="mt-12">
+              <PostFeedback postId={post._id} />
             </div>
 
             {/* Article Footer */}

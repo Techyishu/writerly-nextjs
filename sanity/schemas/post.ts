@@ -148,6 +148,20 @@ export default defineType({
       initialValue: 0,
       validation: (Rule) => Rule.min(0),
     }),
+    defineField({
+      name: 'positiveFeedback',
+      title: 'Positive Feedback Count',
+      type: 'number',
+      initialValue: 0,
+      validation: (Rule) => Rule.min(0),
+    }),
+    defineField({
+      name: 'negativeFeedback',
+      title: 'Negative Feedback Count',
+      type: 'number',
+      initialValue: 0,
+      validation: (Rule) => Rule.min(0),
+    }),
   ],
   preview: {
     select: {
