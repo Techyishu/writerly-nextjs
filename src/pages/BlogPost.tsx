@@ -93,19 +93,24 @@ export default function BlogPost({ slug }: BlogPostProps) {
     try {
       setLoading(true);
       setError(null);
+      console.log('Loading post with slug:', postSlug);
       
       // Add timeout to prevent hanging requests
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 10000);
+        setTimeout(() => reject(new Error('Request timeout')), 30000);
       });
 
       const postPromise = blogService.getPostBySlug(postSlug);
       const postData = await Promise.race([postPromise, timeoutPromise]) as BlogPost | null;
       
+      console.log('Post data received:', postData);
+      
       if (postData) {
         setPost(postData);
+        console.log('Post set successfully');
       } else {
         setError('Post not found');
+        console.log('Post not found');
       }
     } catch (error) {
       console.error('Error loading post:', error);

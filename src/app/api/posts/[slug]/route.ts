@@ -54,7 +54,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       published: post.published || false,
       viewCount: post.viewCount || 0,
       positiveFeedback: post.positiveFeedback || 0,
-      negativeFeedback: post.negativeFeedback || 0,
+      negativeFeedback: post.negativeFeedback ?? 0,
       coverImage: post.coverImage?.asset?.url || '',
       publishedAt: post.publishedAt || new Date().toISOString(),
       _createdAt: post._createdAt || new Date().toISOString(),
