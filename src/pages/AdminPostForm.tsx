@@ -69,8 +69,13 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
       return;
     }
 
+    // Wait for id to be available before loading
     if (isEditing && id) {
+      console.log('Loading post with ID:', id);
       loadPost(id);
+    } else if (isEditing && !id) {
+      // Still waiting for id to load
+      setIsLoadingPost(true);
     }
   }, [isAuthenticated, isEditing, id, router]);
 

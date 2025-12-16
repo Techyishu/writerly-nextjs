@@ -130,10 +130,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Check authentication
     const authResult = await authenticateRequest(request);
     if (!authResult.user) {
+      console.log('Delete: Authentication failed');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await params;
+    console.log('Delete request for post ID:', id);
     
     // Check if Sanity configuration is available
     if (!process.env.SANITY_API_TOKEN) {
@@ -144,63 +146,118 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       }, { status: 500 });
     }
 
-    console.log('Attempting to delete post:', id);
-    
-    try {
-      // First, check if the document exists and get its draft status
-      const doc = await sanityClient.getDocument(id).catch(() => null);
-      
-      if (!doc) {
-        // Try to delete draft version if published version doesn't exist
-        const draftId = id.startsWith('drafts.') ? id : `drafts.${id}`;
-        const draftDoc = await sanityClient.getDocument(draftId).catch(() => null);
-        
-        if (draftDoc) {
-          console.log('Deleting draft document:', draftId);
-          await sanityClient.delete(draftId);
-          return NextResponse.json({ success: true, message: 'Draft deleted successfully' });
-        }
-        
-        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
-      }
+    if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || !process.env.NEXT_PUBLIC_SANITY_DATASET) {
+      console.error('Sanity project configuration is missing');
+      return NextResponse.json({ 
+        error: 'Sanity project configuration missing',
+        details: 'NEXT_PUBLIC_SANITY_PROJECT_ID or NEXT_PUBLIC_SANITY_DATASET is not set'
+      }, { status: 500 });
+    }
 
-      // Delete the published document
-      console.log('Deleting published document:', id);
-      await sanityClient.delete(id);
+    try {
+      // Sanity requires deleting drafts separately from published documents
+      const draftId = id.startsWith('drafts.') ? id : `drafts.${id}`;
+      const publishedId = id.startsWith('drafts.') ? id.replace('drafts.', '') : id;
       
-      // Also try to delete the draft version if it exists
-      const draftId = `drafts.${id}`;
+      console.log('Attempting to delete:', { publishedId, draftId });
+      
+      let deletedCount = 0;
+      const errors: string[] = [];
+      
+      // Try to delete published version
       try {
-        const draftDoc = await sanityClient.getDocument(draftId);
+        const publishedDoc = await sanityClient.getDocument(publishedId).catch(() => null);
+        if (publishedDoc) {
+          console.log('Deleting published document:', publishedId);
+          await sanityClient.delete(publishedId);
+          deletedCount++;
+          console.log('Published document deleted successfully');
+        } else {
+          console.log('Published document not found:', publishedId);
+        }
+      } catch (err: any) {
+        console.error('Error deleting published document:', err);
+        const errorMsg = err?.message || 'Failed to delete published document';
+        errors.push(errorMsg);
+        // Don't fail completely if published doesn't exist
+        if (err?.statusCode !== 404 && !err?.message?.includes('not found')) {
+          throw err; // Re-throw if it's not a "not found" error
+        }
+      }
+      
+      // Try to delete draft version
+      try {
+        const draftDoc = await sanityClient.getDocument(draftId).catch(() => null);
         if (draftDoc) {
           console.log('Deleting draft document:', draftId);
           await sanityClient.delete(draftId);
+          deletedCount++;
+          console.log('Draft document deleted successfully');
+        } else {
+          console.log('Draft document not found:', draftId);
         }
-      } catch (draftError) {
-        // Draft doesn't exist, which is fine
-        console.log('No draft version found, continuing...');
+      } catch (err: any) {
+        console.error('Error deleting draft document:', err);
+        const errorMsg = err?.message || 'Failed to delete draft document';
+        errors.push(errorMsg);
+        // Don't fail completely if draft doesn't exist
+        if (err?.statusCode !== 404 && !err?.message?.includes('not found')) {
+          throw err; // Re-throw if it's not a "not found" error
+        }
       }
       
-      return NextResponse.json({ success: true, message: 'Post deleted successfully' });
-    } catch (deleteError: any) {
-      console.error('Sanity delete error:', deleteError);
-      
-      // Provide more specific error messages
-      if (deleteError.statusCode === 401 || deleteError.message?.includes('unauthorized')) {
-        return NextResponse.json({ 
-          error: 'Delete failed: Unauthorized',
-          details: 'Your SANITY_API_TOKEN does not have permission to delete documents. Please ensure your token has Editor or Admin role permissions in your Sanity project settings.'
-        }, { status: 403 });
-      }
-      
-      if (deleteError.statusCode === 404 || deleteError.message?.includes('not found')) {
+      if (deletedCount === 0) {
+        console.log('No documents found to delete');
         return NextResponse.json({ 
           error: 'Post not found',
           details: 'The post you are trying to delete does not exist.'
         }, { status: 404 });
       }
       
-      throw deleteError; // Re-throw to be caught by outer catch
+      console.log(`Successfully deleted ${deletedCount} document(s)`);
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Post deleted successfully',
+        deleted: deletedCount
+      });
+      
+    } catch (deleteError: any) {
+      console.error('Sanity delete error:', deleteError);
+      console.error('Error details:', {
+        message: deleteError.message,
+        statusCode: deleteError.statusCode,
+        responseBody: deleteError.responseBody,
+        stack: deleteError.stack
+      });
+      
+      // Provide more specific error messages
+      if (deleteError.statusCode === 401 || deleteError.message?.includes('unauthorized') || deleteError.message?.includes('Invalid login')) {
+        return NextResponse.json({ 
+          error: 'Delete failed: Unauthorized',
+          details: 'Your SANITY_API_TOKEN does not have permission to delete documents. Please ensure your token has Editor or Admin role permissions in your Sanity project settings.'
+        }, { status: 403 });
+      }
+      
+      if (deleteError.statusCode === 404 || deleteError.message?.includes('not found') || deleteError.message?.includes('Document not found')) {
+        return NextResponse.json({ 
+          error: 'Post not found',
+          details: 'The post you are trying to delete does not exist.'
+        }, { status: 404 });
+      }
+      
+      if (deleteError.message?.includes('references') || deleteError.message?.includes('referenced')) {
+        return NextResponse.json({ 
+          error: 'Cannot delete post',
+          details: 'This post cannot be deleted because it is referenced by other documents. Please remove all references first.'
+        }, { status: 409 });
+      }
+      
+      // Return the actual error message for debugging
+      return NextResponse.json({ 
+        error: 'Failed to delete post',
+        details: deleteError.message || 'Unknown error occurred',
+        statusCode: deleteError.statusCode
+      }, { status: deleteError.statusCode || 500 });
     }
   } catch (error) {
     console.error('Error deleting post:', error);

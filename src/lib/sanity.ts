@@ -190,17 +190,22 @@ export const blogService = {
   // Delete post
   async deletePost(id: string): Promise<boolean> {
     try {
+      console.log('Deleting post with ID:', id);
       const response = await fetch(`/api/admin/posts/${id}`, {
         method: 'DELETE',
         credentials: 'include', // Include cookies for authentication
       });
 
+      const responseData = await response.json().catch(() => ({}));
+      console.log('Delete response:', { status: response.status, data: responseData });
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.details || errorData.message || errorData.error || 'Failed to delete post';
+        const errorMessage = responseData.details || responseData.message || responseData.error || 'Failed to delete post';
+        console.error('Delete failed:', errorMessage);
         throw new Error(errorMessage);
       }
 
+      console.log('Post deleted successfully');
       return true;
     } catch (error) {
       console.error('Error deleting post:', error);
