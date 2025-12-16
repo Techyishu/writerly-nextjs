@@ -152,14 +152,20 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
       // Upload cover image if a new file is selected
       if (coverImageFile) {
         console.log('Starting image upload...');
-        const imageUrl = await blogService.uploadImage(coverImageFile);
-        console.log('Image upload result:', imageUrl);
-        if (!imageUrl) {
-          throw new Error('Image upload failed');
+        try {
+          const imageUrl = await blogService.uploadImage(coverImageFile);
+          console.log('Image upload result:', imageUrl);
+          if (!imageUrl) {
+            throw new Error('Image upload failed: No asset ID returned');
+          }
+          // Store the asset ID for Sanity
+          finalFormData.coverImage = imageUrl;
+        } catch (uploadError: any) {
+          console.error('Image upload error:', uploadError);
+          const errorMessage = uploadError.message || 'Failed to upload image';
+          toast.error(`Image upload failed: ${errorMessage}`);
+          throw uploadError; // Re-throw to stop form submission
         }
-        // For Sanity, we'll store the image URL as a string for now
-        // In production, you'd want to upload to Sanity and get the asset reference
-        finalFormData.coverImage = imageUrl;
       }
 
       console.log('Saving post to database...');

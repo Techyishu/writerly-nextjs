@@ -23,6 +23,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'Invalid file type. Only images are allowed.' }, { status: 400 });
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 });
+    }
+
     console.log('File received:', { fileName: file.name, fileSize: file.size, fileType: file.type });
 
     // Check if Sanity configuration is available
@@ -30,7 +41,7 @@ export async function POST(request: NextRequest) {
       console.error('SANITY_API_TOKEN is not configured');
       return NextResponse.json({ 
         error: 'Sanity configuration missing',
-        details: 'SANITY_API_TOKEN environment variable is not set'
+        details: 'SANITY_API_TOKEN environment variable is not set. Please check your .env file and ensure you have a token with Editor or Admin permissions.'
       }, { status: 500 });
     }
 
@@ -49,20 +60,47 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    const asset = await sanityClient.assets.upload('image', buffer, {
-      filename: file.name,
-      contentType: file.type,
-    });
-    console.log('Upload successful:', { assetId: asset._id, url: asset.url });
-    
-    return NextResponse.json({ assetId: asset._id, url: asset.url });
+    try {
+      const asset = await sanityClient.assets.upload('image', buffer, {
+        filename: file.name,
+        contentType: file.type,
+      });
+      console.log('Upload successful:', { assetId: asset._id, url: asset.url });
+      
+      return NextResponse.json({ assetId: asset._id, url: asset.url });
+    } catch (uploadError: any) {
+      console.error('Sanity upload error:', uploadError);
+      
+      // Provide more specific error messages
+      if (uploadError.statusCode === 401 || uploadError.message?.includes('unauthorized')) {
+        return NextResponse.json({ 
+          error: 'Upload failed: Unauthorized',
+          details: 'Your SANITY_API_TOKEN does not have permission to upload files. Please ensure your token has Editor or Admin role permissions in your Sanity project settings.'
+        }, { status: 403 });
+      }
+      
+      if (uploadError.statusCode === 413 || uploadError.message?.includes('too large')) {
+        return NextResponse.json({ 
+          error: 'Upload failed: File too large',
+          details: 'The file exceeds Sanity\'s upload size limit.'
+        }, { status: 413 });
+      }
+      
+      throw uploadError; // Re-throw to be caught by outer catch
+    }
   } catch (error) {
     console.error('Error uploading image:', error);
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = error instanceof Error && 'details' in error 
+      ? (error as any).details 
+      : errorMessage;
+    
     return NextResponse.json({ 
       error: 'Failed to upload image',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : 'No stack trace'
+      details: errorDetails,
+      message: errorMessage
     }, { status: 500 });
   }
 }

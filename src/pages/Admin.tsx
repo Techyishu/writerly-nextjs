@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function Admin() {
   const { user, isAuthenticated } = useAuth();
@@ -53,10 +54,15 @@ export default function Admin() {
   const deletePost = async (postId: string) => {
     if (window.confirm('Are you sure you want to delete this post?')) {
       try {
-        await blogService.deletePost(postId);
-        loadPosts(); // Reload posts
-      } catch (error) {
+        const success = await blogService.deletePost(postId);
+        if (success) {
+          toast.success('Post deleted successfully');
+          loadPosts(); // Reload posts
+        }
+      } catch (error: any) {
         console.error('Error deleting post:', error);
+        const errorMessage = error.message || 'Failed to delete post';
+        toast.error(`Delete failed: ${errorMessage}`);
       }
     }
   };

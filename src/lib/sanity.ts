@@ -196,13 +196,15 @@ export const blogService = {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete post');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.details || errorData.message || errorData.error || 'Failed to delete post';
+        throw new Error(errorMessage);
       }
 
       return true;
     } catch (error) {
       console.error('Error deleting post:', error);
-      return false;
+      throw error; // Re-throw so the UI can show the error
     }
   },
 
@@ -221,10 +223,17 @@ export const blogService = {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Upload failed:', errorData);
-        throw new Error(errorData.details || 'Failed to upload image');
+        const errorMessage = errorData.details || errorData.message || errorData.error || 'Failed to upload image';
+        const error = new Error(errorMessage);
+        (error as any).details = errorData.details;
+        (error as any).status = response.status;
+        throw error;
       }
 
       const result = await response.json();
+      if (!result.assetId) {
+        throw new Error('Upload succeeded but no asset ID returned');
+      }
       return result.assetId;
     } catch (error) {
       console.error('Error uploading image:', error);
