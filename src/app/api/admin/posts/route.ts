@@ -69,7 +69,8 @@ export async function GET(request: NextRequest) {
         asset->{
           _id,
           url
-        }
+        },
+        asset
       },
       publishedAt,
       _createdAt,

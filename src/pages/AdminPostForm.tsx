@@ -59,6 +59,8 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
 
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string>('');
+  const [existingCoverImage, setExistingCoverImage] = useState<string>(''); // Store existing image URL/ID
+  const [shouldRemoveCoverImage, setShouldRemoveCoverImage] = useState(false); // Track if user wants to remove image
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingPost, setIsLoadingPost] = useState(isEditing);
@@ -87,6 +89,7 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
       
       if (post) {
         console.log('Loaded post coverImage:', post.coverImage);
+        const coverImageValue = typeof post.coverImage === 'string' ? post.coverImage : '';
         setFormData({
           title: post.title,
           excerpt: post.excerpt,
@@ -96,20 +99,29 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
           readTime: post.readTime,
           published: post.published,
           featured: post.featured,
-          coverImage: typeof post.coverImage === 'string' ? post.coverImage : '',
+          coverImage: coverImageValue,
         });
-        // Set preview if coverImage is a URL (not an asset ID)
-        if (post.coverImage && typeof post.coverImage === 'string') {
-          // If it's a URL (starts with http), use it directly
-          // If it's an asset ID, we'd need to fetch the URL, but for now just show it if it's a URL
-          if (post.coverImage.startsWith('http://') || post.coverImage.startsWith('https://')) {
-            setCoverImagePreview(post.coverImage);
+        
+        // Set preview and existing image
+        if (coverImageValue) {
+          setExistingCoverImage(coverImageValue);
+          // The API should return the full URL (from the GROQ query with asset->)
+          // If it's a URL (starts with http), use it directly for preview
+          if (coverImageValue.startsWith('http://') || coverImageValue.startsWith('https://')) {
+            setCoverImagePreview(coverImageValue);
           } else {
-            // It's an asset ID, we'll need to construct the URL or fetch it
-            // For now, we'll try to use the Sanity image URL builder if available
-            console.log('Cover image is asset ID, will need to fetch URL');
+            // If it's an asset ID (starts with 'image-'), we need to construct the URL
+            // This shouldn't normally happen as the API query resolves assets, but handle it just in case
+            console.log('Cover image is asset ID (should be URL from API):', coverImageValue);
+            // Store the asset ID - we'll keep it for updating, but won't show preview
+            // The user can see the image on the actual blog post
+            setCoverImagePreview('');
           }
+        } else {
+          setExistingCoverImage('');
+          setCoverImagePreview('');
         }
+        setShouldRemoveCoverImage(false);
       } else {
         toast.error('Post not found');
         router.push('/admin');
@@ -154,7 +166,14 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
   const removeCoverImage = () => {
     setCoverImageFile(null);
     setCoverImagePreview('');
+    setExistingCoverImage('');
+    setShouldRemoveCoverImage(true);
     setFormData(prev => ({ ...prev, coverImage: '' }));
+    // Clear the file input
+    const fileInput = document.getElementById('coverImage') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -164,8 +183,12 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
     try {
       let finalFormData = { ...formData };
       
-      // Upload cover image if a new file is selected
-      if (coverImageFile) {
+      // Handle cover image removal
+      if (shouldRemoveCoverImage) {
+        console.log('Removing cover image');
+        finalFormData.coverImage = null as any; // Explicitly set to null to remove
+      } else if (coverImageFile) {
+        // Upload cover image if a new file is selected
         console.log('Starting image upload...');
         try {
           const imageUrl = await blogService.uploadImage(coverImageFile);
@@ -181,6 +204,9 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
           toast.error(`Image upload failed: ${errorMessage}`);
           throw uploadError; // Re-throw to stop form submission
         }
+      } else if (isEditing && existingCoverImage) {
+        // Keep existing image if no new file and not removing
+        finalFormData.coverImage = existingCoverImage;
       }
 
       console.log('Saving post to database...');
@@ -297,14 +323,27 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
               <div className="space-y-2">
                 <Label htmlFor="coverImage" className="text-white">Cover Image</Label>
                 <div className="space-y-4">
-                  <Input
-                    id="coverImage"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCoverImageChange}
-                    className="bg-white/10 border-white/20 text-white file:bg-purple-400 file:text-white file:border-0 file:rounded-md file:px-4 file:py-2 file:mr-4"
-                  />
-                  {coverImagePreview && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="coverImage"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverImageChange}
+                      className="bg-white/10 border-white/20 text-white file:bg-purple-400 file:text-white file:border-0 file:rounded-md file:px-4 file:py-2 file:mr-4 flex-1"
+                    />
+                    {(coverImagePreview || existingCoverImage) && !shouldRemoveCoverImage && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={removeCoverImage}
+                        className="whitespace-nowrap"
+                      >
+                        Remove Image
+                      </Button>
+                    )}
+                  </div>
+                  {coverImagePreview && !shouldRemoveCoverImage && (
                     <div className="relative">
                       <img
                         src={coverImagePreview}
@@ -320,6 +359,13 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
                       >
                         Remove
                       </Button>
+                    </div>
+                  )}
+                  {shouldRemoveCoverImage && (
+                    <div className="p-4 bg-yellow-400/10 border border-yellow-400/20 rounded-lg">
+                      <p className="text-yellow-300 text-sm">
+                        Cover image will be removed when you save the post.
+                      </p>
                     </div>
                   )}
                   <p className="text-sm text-white/60">

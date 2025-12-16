@@ -80,8 +80,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Handle cover image - if it's an asset ID, create proper reference
     if (data.coverImage !== undefined) {
-      if (data.coverImage === null || data.coverImage === '') {
+      if (data.coverImage === null || data.coverImage === '' || data.coverImage === false) {
         // Explicitly remove cover image
+        console.log('Removing cover image from post');
         updateData.coverImage = null;
       } else if (typeof data.coverImage === 'string') {
         // Check if it's a Sanity asset ID (starts with 'image-' or 'file-')
