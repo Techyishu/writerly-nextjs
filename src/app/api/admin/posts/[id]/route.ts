@@ -13,10 +13,26 @@ function convertToBlogPost(doc: any) {
   // Handle cover image properly
   let coverImageUrl = '';
   if (doc.coverImage) {
-    if (doc.coverImage.asset && doc.coverImage.asset.url) {
-      coverImageUrl = doc.coverImage.asset.url;
+    // Check if it's a Sanity image reference with asset
+    if (doc.coverImage.asset) {
+      // Asset might be a reference object or already resolved
+      if (doc.coverImage.asset.url) {
+        // Already resolved (from GROQ query with asset->)
+        coverImageUrl = doc.coverImage.asset.url;
+      } else if (doc.coverImage.asset._ref) {
+        // It's a reference, we need to extract the asset ID
+        // For editing, we'll return the asset ID so it can be used to update
+        coverImageUrl = doc.coverImage.asset._ref;
+      } else if (typeof doc.coverImage.asset === 'string') {
+        // Asset is just a string (asset ID)
+        coverImageUrl = doc.coverImage.asset;
+      }
     } else if (typeof doc.coverImage === 'string') {
+      // It's a URL string
       coverImageUrl = doc.coverImage;
+    } else if (doc.coverImage._ref) {
+      // Direct reference
+      coverImageUrl = doc.coverImage._ref;
     }
   }
 
@@ -63,18 +79,40 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Handle cover image - if it's an asset ID, create proper reference
-    if (data.coverImage) {
-      if (typeof data.coverImage === 'string' && data.coverImage.startsWith('image-')) {
-        // It's a Sanity asset ID, create proper reference
-        updateData.coverImage = {
-          _type: 'image',
-          asset: {
-            _type: 'reference',
-            _ref: data.coverImage
-          }
-        };
+    if (data.coverImage !== undefined) {
+      if (data.coverImage === null || data.coverImage === '') {
+        // Explicitly remove cover image
+        updateData.coverImage = null;
+      } else if (typeof data.coverImage === 'string') {
+        // Check if it's a Sanity asset ID (starts with 'image-' or 'file-')
+        if (data.coverImage.startsWith('image-') || data.coverImage.startsWith('file-')) {
+          // It's a Sanity asset ID, create proper reference
+          console.log('Updating image reference for asset ID:', data.coverImage);
+          updateData.coverImage = {
+            _type: 'image',
+            asset: {
+              _type: 'reference',
+              _ref: data.coverImage
+            }
+          };
+        } else if (data.coverImage.startsWith('http://') || data.coverImage.startsWith('https://')) {
+          // It's a URL, store as string (fallback for external images)
+          console.log('Updating cover image as URL:', data.coverImage);
+          updateData.coverImage = data.coverImage;
+        } else {
+          // Assume it's an asset ID even if it doesn't start with 'image-'
+          // Sometimes Sanity asset IDs might have different formats
+          console.log('Treating as asset ID (no prefix):', data.coverImage);
+          updateData.coverImage = {
+            _type: 'image',
+            asset: {
+              _type: 'reference',
+              _ref: data.coverImage
+            }
+          };
+        }
       } else {
-        // It's a URL or other format, store as string for now
+        // Already an object, use as is
         updateData.coverImage = data.coverImage;
       }
     }

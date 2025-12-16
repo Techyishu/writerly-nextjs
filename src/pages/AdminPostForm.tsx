@@ -81,6 +81,7 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
       const post = posts.find(p => p._id === postId);
       
       if (post) {
+        console.log('Loaded post coverImage:', post.coverImage);
         setFormData({
           title: post.title,
           excerpt: post.excerpt,
@@ -92,8 +93,17 @@ export default function AdminPostForm({ id }: AdminPostFormProps) {
           featured: post.featured,
           coverImage: typeof post.coverImage === 'string' ? post.coverImage : '',
         });
+        // Set preview if coverImage is a URL (not an asset ID)
         if (post.coverImage && typeof post.coverImage === 'string') {
-          setCoverImagePreview(post.coverImage);
+          // If it's a URL (starts with http), use it directly
+          // If it's an asset ID, we'd need to fetch the URL, but for now just show it if it's a URL
+          if (post.coverImage.startsWith('http://') || post.coverImage.startsWith('https://')) {
+            setCoverImagePreview(post.coverImage);
+          } else {
+            // It's an asset ID, we'll need to construct the URL or fetch it
+            // For now, we'll try to use the Sanity image URL builder if available
+            console.log('Cover image is asset ID, will need to fetch URL');
+          }
         }
       } else {
         toast.error('Post not found');
